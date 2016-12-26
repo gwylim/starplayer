@@ -4,47 +4,42 @@ const U64_LOG: usize = 6;
 /// Fixed length bit vector used to store board positions
 #[derive(Copy, Clone, Hash, Debug, PartialEq, Eq)]
 pub struct BoardVec {
-    array: [u64; ARRAY_SIZE],
+    word0: u64,
+    word1: u64
 }
 
 impl BoardVec {
     pub fn new() -> Self {
-        BoardVec { array: [0; ARRAY_SIZE] }
+        BoardVec { word0: 0, word1: 0 }
     }
 
     pub fn size() -> usize {
-        ARRAY_SIZE << U64_LOG
+        2 << U64_LOG
     }
 
     pub fn set(&mut self, mut idx: usize) {
-        let self_index = idx >> U64_LOG;
-        idx -= self_index << U64_LOG;
-        self.array[self_index] = self.array[self_index] | (1 << idx);
+        if idx < 64 {
+            self.word0 |= 1 << idx;
+        } else {
+            self.word1 |= 1 << (idx - 64);
+        }
     }
 
     pub fn get(&self, mut idx: usize) -> bool {
-        let self_index = idx >> U64_LOG;
-        idx -= self_index << U64_LOG;
-        (self.array[self_index] & (1 << idx)) != 0
+        if idx < 64 {
+            (self.word0 & (1 << idx)) != 0
+        } else {
+            (self.word1 & (1 << (idx - 64))) != 0
+        }
     }
 
     /// Whether this vector has any 1 bits in common with `other`
     pub fn intersects(&self, other: &BoardVec) -> bool {
-        for i in 0..ARRAY_SIZE {
-            if (self.array[i] & other.array[i]) != 0 {
-                return true;
-            }
-        }
-        false
+        ((self.word0 & other.word0) != 0) || ((self.word1 & other.word1) != 0)
     }
 
     /// Whether all bits set to 1 in `other` are also 1 in this vector
     pub fn contains(&self, other: &BoardVec) -> bool {
-        for i in 0..ARRAY_SIZE {
-            if (self.array[i] & other.array[i]) != other.array[i] {
-                return false;
-            }
-        }
-        true
+        ((self.word0 & other.word0) == other.word0) && ((self.word1 & other.word1) == other.word1)
     }
 }
