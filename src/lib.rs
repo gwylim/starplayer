@@ -8,6 +8,7 @@ mod statistics;
 mod board;
 
 use fnv::FnvHashMap;
+use rand::XorShiftRng;
 
 use info::BoardInfo;
 use board::BoardState;
@@ -78,7 +79,13 @@ fn create_children(info: &BoardInfo, table: &mut FnvHashMap<BoardState, Node>, s
     table.get_mut(&state).unwrap().children_created = true;
 }
 
-fn play(info: &BoardInfo, table: &mut FnvHashMap<BoardState, Node>, state: BoardState, komi: isize) -> Stats {
+fn play(
+    info: &BoardInfo,
+    rng: &mut XorShiftRng,
+    table: &mut FnvHashMap<BoardState, Node>,
+    state: BoardState,
+    komi: isize,
+) -> Stats {
     if state.finished(&info) {
         // TODO: move this logic to BoardState
         let winner = if state.is_winner(info, Player::First, komi) {
@@ -93,7 +100,7 @@ fn play(info: &BoardInfo, table: &mut FnvHashMap<BoardState, Node>, state: Board
         (node.self_visits, node.children_created)
     };
     let stats = if node_self_visits == 0 {
-        state.play_random(info, komi, INNER_ITERATIONS)
+        state.play_random(info, rng, komi, INNER_ITERATIONS)
     } else {
         if !node_children_created {
             create_children(info, table, state);
@@ -112,7 +119,7 @@ fn play(info: &BoardInfo, table: &mut FnvHashMap<BoardState, Node>, state: Board
                 }
             }
         }
-        play(info, table, best_child_state.unwrap(), komi)
+        play(info, rng, table, best_child_state.unwrap(), komi)
     };
     update(info, table, state, &stats);
     stats
@@ -185,6 +192,7 @@ pub struct StarAI {
     info: BoardInfo,
     state: BoardState,
     table: FnvHashMap<BoardState, Node>,
+    rng: XorShiftRng,
 }
 
 // TODO: move implementations into here
@@ -200,13 +208,14 @@ impl StarAI {
             info: info,
             state: state,
             table: table,
+            rng: rand::weak_rng(),
         }
     }
 
     // TODO: figure out how to thread komi through everything
     pub fn calculate(&mut self, iterations: usize, komi: isize) {
         for _ in 0..iterations {
-            play(&self.info, &mut self.table, self.state, komi);
+            play(&self.info, &mut self.rng, &mut self.table, self.state, komi);
         }
     }
 

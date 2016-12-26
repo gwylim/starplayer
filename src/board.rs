@@ -1,6 +1,6 @@
 use std;
 use std::hash::{Hash, Hasher};
-use rand::{self, Rng};
+use rand::{Rng, XorShiftRng};
 
 use statistics::Stats;
 use info::{BoardInfo, Pattern};
@@ -128,11 +128,11 @@ impl BoardState {
     /**
      * Play random games starting from this game state, and return win statistics
      */
-    pub fn play_random(self, info: &BoardInfo, komi: isize, iterations: u32) -> Stats {
+    pub fn play_random(self, info: &BoardInfo, rng: &mut XorShiftRng, komi: isize, iterations: u32) -> Stats {
         let mut result = Stats::new(info);
         for _ in 0..iterations {
             let mut new_state = self;
-            new_state.play_random_inner(info);
+            new_state.play_random_inner(info, rng);
             let winner = if new_state.is_winner(info, Player::First, komi) {
                 Player::First
             } else {
@@ -182,15 +182,14 @@ impl BoardState {
         }
     }
 
-    fn play_random_inner(&mut self, info: &BoardInfo) {
+    fn play_random_inner(&mut self, info: &BoardInfo, rng: &mut XorShiftRng) {
         let mut unplayed = Vec::with_capacity(info.count - self.moves);
         for i in 0..info.count {
             if !self.any(i) {
                 unplayed.push(i);
             }
         }
-        // TODO: initialize rng somewhere else
-        rand::weak_rng().shuffle(&mut unplayed);
+        rng.shuffle(&mut unplayed);
         let mut index = 0;
         let mut last_played = None;
         loop {
