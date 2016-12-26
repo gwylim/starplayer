@@ -1,4 +1,3 @@
-const ARRAY_SIZE: usize = 2;
 const U64_LOG: usize = 6;
 
 /// Fixed length bit vector used to store board positions
@@ -17,7 +16,7 @@ impl BoardVec {
         2 << U64_LOG
     }
 
-    pub fn set(&mut self, mut idx: usize) {
+    pub fn set(&mut self, idx: usize) {
         if idx < 64 {
             self.word0 |= 1 << idx;
         } else {
@@ -25,7 +24,7 @@ impl BoardVec {
         }
     }
 
-    pub fn get(&self, mut idx: usize) -> bool {
+    pub fn get(&self, idx: usize) -> bool {
         if idx < 64 {
             (self.word0 & (1 << idx)) != 0
         } else {
