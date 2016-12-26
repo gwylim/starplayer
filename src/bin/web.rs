@@ -26,7 +26,6 @@ pub extern fn starplayer_best_move(ptr: *mut StarAI) -> i32 {
     let star = unsafe { &*ptr };
     let (x, y) = star.best_move();
     let size = star.size();
-    println!("size {} {} {}", size, x, y);
     (x + y * (size + size - 1)) as i32
 }
 
