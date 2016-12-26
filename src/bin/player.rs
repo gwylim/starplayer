@@ -9,9 +9,9 @@ use starplayer::StarAI;
 
 // TODO: these type of constants shouldn't be duplicated here
 const SIZE: usize = 7;
-const MOVE_TIME: u64 = 1;
+const MOVE_TIME_MS: u64 = 300;
 const KOMI: isize = 1;
-const ITERATIONS: usize = 100;
+const ITERATIONS: usize = 10;
 
 fn try_input<F: FromStr>() -> Option<F> {
     let mut buffer = String::new();
@@ -36,12 +36,17 @@ fn write_or_panic<F: ToString>(value: F) {
 
 fn make_move(ai: &mut StarAI) {
     let start_time = SystemTime::now();
+    let mut iterations = 0;
     loop {
+        iterations += ITERATIONS;
         ai.calculate(ITERATIONS, KOMI);
-        if start_time.elapsed().unwrap().as_secs() > MOVE_TIME {
+        let elapsed = start_time.elapsed().unwrap();
+        let elapsed_milliseconds = elapsed.as_secs() + (elapsed.subsec_nanos() as u64 / 1000000);
+        if elapsed_milliseconds > MOVE_TIME_MS {
             break;
         }
     }
+    writeln!(io::stderr(), "Iterations: {}", iterations).unwrap();
     let (x, y) = ai.best_move();
     ai.add_move(x, y);
     write_or_panic(x);
