@@ -3,7 +3,7 @@ use std::hash::{Hash, Hasher};
 use rand::{self, Rng};
 
 use statistics::Stats;
-use info::BoardInfo;
+use info::{BoardInfo, Pattern};
 use player::Player;
 use boardvec::BoardVec;
 
@@ -192,6 +192,7 @@ impl BoardState {
         // TODO: initialize rng somewhere else
         rand::weak_rng().shuffle(&mut unplayed);
         let mut index = 0;
+        let mut last_played = None;
         loop {
             if self.finished(info) {
                 break;
@@ -199,16 +200,43 @@ impl BoardState {
 
             let is_first_player = self.moves%2 == 0;
 
-            let pos = unplayed[index];
-            if !self.any(pos) {
+            let mut to_play = None;
+
+            // Try playing pattern first
+            if let Some(last_pos) = last_played {
+                let patterns_for_pos: &Vec<Pattern> = &info.patterns[last_pos];
+                for pattern in patterns_for_pos.iter() {
+                    let (last_player, current_player) = if is_first_player {
+                        (self.second_player, self.first_player)
+                    } else {
+                        (self.first_player, self.second_player)
+                    };
+                    if let Some(pos) = pattern.check(&last_player, &current_player) {
+                        to_play = Some(pos);
+                        break;
+                    }
+                }
+            }
+
+            // Play next empty position otherwise
+            if let None = to_play {
+                while index < unplayed.len() && self.any(unplayed[index]) {
+                    index += 1;
+                }
+                if index < unplayed.len() {
+                    to_play = Some(unplayed[index]);
+                }
+            }
+
+            if let Some(pos) = to_play {
                 if is_first_player {
                     self.first_player.set(pos);
                 } else {
                     self.second_player.set(pos);
                 }
                 self.moves += 1;
+                last_played = Some(pos);
             }
-            index += 1;
         }
     }
 }

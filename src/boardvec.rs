@@ -1,6 +1,7 @@
 const ARRAY_SIZE: usize = 2;
 const U64_LOG: usize = 6;
 
+/// Fixed length bit vector used to store board positions
 #[derive(Copy, Clone, Hash, Debug, PartialEq, Eq)]
 pub struct BoardVec {
     array: [u64; ARRAY_SIZE],
@@ -25,5 +26,25 @@ impl BoardVec {
         let self_index = idx >> U64_LOG;
         idx -= self_index << U64_LOG;
         (self.array[self_index] & (1 << idx)) != 0
+    }
+
+    /// Whether this vector has any 1 bits in common with `other`
+    pub fn intersects(&self, other: &BoardVec) -> bool {
+        for i in 0..ARRAY_SIZE {
+            if (self.array[i] & other.array[i]) != 0 {
+                return true;
+            }
+        }
+        false
+    }
+
+    /// Whether all bits set to 1 in `other` are also 1 in this vector
+    pub fn contains(&self, other: &BoardVec) -> bool {
+        for i in 0..ARRAY_SIZE {
+            if (self.array[i] & other.array[i]) != other.array[i] {
+                return false;
+            }
+        }
+        true
     }
 }
