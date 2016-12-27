@@ -41,7 +41,7 @@ fn make_move(ai: &mut StarAI) {
         iterations += ITERATIONS;
         ai.calculate(ITERATIONS, KOMI);
         let elapsed = start_time.elapsed().unwrap();
-        let elapsed_milliseconds = elapsed.as_secs() + (elapsed.subsec_nanos() as u64 / 1000000);
+        let elapsed_milliseconds = elapsed.as_secs() * 1000 + (elapsed.subsec_nanos() as u64 / 1000000);
         if elapsed_milliseconds > MOVE_TIME_MS {
             break;
         }
