@@ -6,7 +6,7 @@ use std::mem::transmute;
 
 const KOMI: isize = 1;
 
-#[link_args = "-O3 --memory-init-file 0 -s EXPORTED_FUNCTIONS=['_main','_starplayer_new','_starplayer_calculate','_starplayer_best_move','_starplayer_add_move','_starplayer_destroy'] -s NO_EXIT_RUNTIME=1 -s TOTAL_MEMORY=1073741824"]
+#[link_args = "-O3 --memory-init-file 0 -s EXPORTED_FUNCTIONS=['_main','_starplayer_new','_starplayer_calculate','_starplayer_best_move','_starplayer_add_move','_starplayer_destroy'] -s NO_EXIT_RUNTIME=1"]
 extern {}
 
 #[no_mangle]
